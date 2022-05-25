@@ -1,6 +1,6 @@
 # Robust Adversarial Model-Based Offline Reinforcement Learning (RAMBO)
 
-Code to reproduce the experiments for RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning.
+Code to reproduce the experiments for [RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning](https://arxiv.org/abs/2204.12581).
 
 Our implementation builds upon the code for [MOPO](https://github.com/tianheyu927/mopo).
 
@@ -25,3 +25,15 @@ rambo run_example examples.development --config examples.config.rambo.mujoco.hop
 #### Logging
 
 By default, TensorBoard logs are generated in the "logs" directory. The code is also set up to log using Weights and Biases (WandB). To enable the use of WandB, set "log_wandb" to True in the configuration file.
+
+
+## Citing RAMBO
+
+```
+@article{rigter2022rambo,
+  title={RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning},
+  author={Rigter, Marc and Lacerda, Bruno and Hawes, Nick},
+  journal={arXiv preprint arXiv:2204.12581},
+  year={2022}
+}
+```
