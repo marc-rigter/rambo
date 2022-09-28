@@ -56,7 +56,7 @@ class RAMBO(RLAlgorithm):
 
             log_dir=os.getcwd(),
             log_wandb=False,
-            wandb_project="RAMBO",
+            wandb_project="RAMBO-RL",
             wandb_group="",
             config=None,
 
@@ -83,6 +83,9 @@ class RAMBO(RLAlgorithm):
             action_prior='uniform',
             reparameterize=False,
             store_extra_policy_info=False,
+            pretrain_bc=False,
+            bc_lr=1e-4,
+            bc_epochs=50,
 
             deterministic=False,
             rollout_random=False,
@@ -169,6 +172,10 @@ class RAMBO(RLAlgorithm):
         self._policy_lr = actor_lr
         self._Q_lr = critic_lr
 
+        self._bc_lr = bc_lr
+        self._bc_epochs = bc_epochs
+        self._do_bc = pretrain_bc
+
         self._reward_scale = reward_scale
         self._target_entropy = (
             -np.prod(self._training_environment.action_space.shape)
@@ -226,6 +233,7 @@ class RAMBO(RLAlgorithm):
         self._init_placeholders()
         self._init_actor_update()
         self._init_critic_update()
+        self._init_bc_update()
 
     def _train(self):
         """Return a generator that performs RAMBO offline RL training.
@@ -247,6 +255,12 @@ class RAMBO(RLAlgorithm):
 
         self._training_before_hook()
 
+        if self._do_bc:
+            print('[ RAMBO ] Behaviour cloning policy for {} epochs'.format(
+                self._bc_epochs)
+            )
+            self._pretrain_bc(n_epochs=self._bc_epochs)
+
         #### model training
         print('[ RAMBO ] log_dir: {} | ratio: {}'.format(self._log_dir, self._real_ratio))
         print('[ RAMBO ] Training model at epoch {} | freq {} | timestep {} (total: {})'.format(
@@ -267,6 +281,7 @@ class RAMBO(RLAlgorithm):
         self._init_adversarial_model_update()
         gt.stamp('epoch_train_model')
         ####
+
 
         # number of times to alternate between agent and adversary
         for outer in range(self._n_epochs // self._epoch_per_adv_update):
@@ -495,6 +510,55 @@ class RAMBO(RLAlgorithm):
             model_metrics = self._model.train(train_inputs, train_outputs, **kwargs)
         return model_metrics
 
+    def _pretrain_bc(self, batch_size=256, n_epochs=50, max_logging=2000, holdout_ratio=0.1):
+        """ Pretrain the policy using behaviour cloning on the dataset
+        """
+        progress = Progress(n_epochs)
+
+        env_samples = self._pool.return_all_samples()
+        obs = env_samples["observations"]
+        act = env_samples["actions"]
+
+        # Split into training and holdout sets
+        num_holdout = min(int(obs.shape[0] * holdout_ratio), max_logging)
+        permutation = np.random.permutation(obs.shape[0])
+        obs, holdout_obs = obs[permutation[num_holdout:]], obs[permutation[:num_holdout]]
+        act, holdout_act = act[permutation[num_holdout:]], act[permutation[:num_holdout]]
+        idxs = np.random.randint(obs.shape[0], size=[obs.shape[0]])
+
+        mse_loss = self._session.run(
+            self._mse_loss,
+            feed_dict = {
+                self._observations_ph: holdout_obs,
+                self._actions_ph: holdout_act
+            }
+        )
+
+        for i in range(n_epochs):
+            for batch_num in range(int(obs.shape[0] // batch_size)):
+                batch_idxs = idxs[batch_num * batch_size:(batch_num + 1) * batch_size]
+                acts = act[batch_idxs]
+                obss = obs[batch_idxs]
+                if np.max(acts) >= 1.0 or np.min(acts) <= -1.0:
+                    continue
+
+                feed_dict = {
+                    self._observations_ph: obss,
+                    self._actions_ph: acts
+                }
+                self._session.run(self._bc_train_op, feed_dict)
+
+            mse_loss = self._session.run(
+                self._mse_loss,
+                feed_dict = {
+                    self._observations_ph: holdout_obs,
+                    self._actions_ph: holdout_act
+                }
+            )
+
+            progress.update()
+            progress.set_description([['BC loss', mse_loss]])
+
     def _rollout_model(self, rollout_batch_size, **kwargs):
         print('[ Model Rollout ] Starting | Epoch: {} | Rollout length: {} | Batch size: {} | Type: {}'.format(
             self._epoch, self._rollout_length, rollout_batch_size, self._model_type
@@ -677,6 +741,32 @@ class RAMBO(RLAlgorithm):
             next_value=(1 - self._terminals_ph) * next_value)
 
         return Q_target
+
+    def _init_bc_update(self):
+        """ Initialise update to initially perform behaviour cloning on the
+        dataset prior to running rambo.
+        """
+        log_pis = self._policy.log_pis([self._observations_ph], self._actions_ph)
+        bc_loss = self._bc_loss = -tf.reduce_mean(log_pis)
+
+        actions = self._policy.actions([self._observations_ph])
+        mse = self._mse_loss = tf.reduce_mean(tf.square(actions - self._actions_ph))
+
+        self._bc_optimizer = tf.train.AdamOptimizer(
+            learning_rate=self._bc_lr,
+            name="bc_optimizer")
+        bc_train_op = tf.contrib.layers.optimize_loss(
+            bc_loss,
+            self.global_step,
+            learning_rate=self._bc_lr,
+            optimizer=self._policy_optimizer,
+            variables=self._policy.trainable_variables,
+            increment_global_step=False,
+            summaries=(
+                "loss", "gradients", "gradient_norm", "global_gradient_norm"
+            ) if self._tf_summaries else ())
+
+        self._bc_train_op = bc_train_op
 
     def _init_critic_update(self):
         """Create minimization operation for critic Q-function.

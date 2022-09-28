@@ -11,5 +11,6 @@ params['kwargs'].update({
     'pool_load_path': 'd4rl/antmaze-medium-diverse-v0',
     'rollout_length': 5,
     'adversary_loss_weighting': 0,
-    'rollout_random': True
+    'rollout_random': True,
+    'pretrain_bc': False
 })

@@ -9,6 +9,6 @@ params.update({
 })
 params['kwargs'].update({
     'pool_load_path': 'd4rl/hopper-medium-replay-v2',
-    'rollout_length': 5,
+    'rollout_length': 2,
     'adversary_loss_weighting': 3e-4,
 })

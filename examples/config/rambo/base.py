@@ -30,6 +30,7 @@ base_params = {
         'deterministic': False,
         'num_networks': 7,
         'num_elites': 5,
-        'max_model_t': None
+        'max_model_t': None,
+        'pretrain_bc': True
     }
 }

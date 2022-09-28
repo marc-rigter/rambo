@@ -10,5 +10,5 @@ params.update({
 params['kwargs'].update({
     'pool_load_path': 'd4rl/walker2d-random-v2',
     'rollout_length': 5,
-    'adversary_loss_weighting': 3e-4,
+    'adversary_loss_weighting': 0,
 })

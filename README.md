@@ -33,7 +33,7 @@ By default, TensorBoard logs are generated in the "logs" directory. The code is 
 @article{rigter2022rambo,
   title={RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning},
   author={Rigter, Marc and Lacerda, Bruno and Hawes, Nick},
-  journal={arXiv preprint arXiv:2204.12581},
+  journal={Advances in Neural Information Processing Systems},
   year={2022}
 }
 ```
