@@ -47,6 +47,8 @@ class Writer():
     def add_dict(self, dictionary, epoch):
         if self._wandb_run is not None:
             wandb.log(dictionary, step=epoch)
+        for label, val in dictionary.items():
+            self._writer.add_scalar(label, val, epoch)
 
     def plot_cdfs(self, label, epoch, env_mean, model_mean, env_paths, model_paths):
         plt.clf()
