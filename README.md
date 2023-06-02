@@ -1,8 +1,8 @@
 # Robust Adversarial Model-Based Offline Reinforcement Learning (RAMBO)
 
-Code to reproduce the experiments for [RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning](https://arxiv.org/abs/2204.12581).
+Official code to reproduce the experiments for [RAMBO-RL: Robust Adversarial Model-Based Offline Reinforcement Learning](https://arxiv.org/abs/2204.12581). This implementation builds upon the code for [MOPO](https://github.com/tianheyu927/mopo).
 
-Our implementation builds upon the code for [MOPO](https://github.com/tianheyu927/mopo).
+For a PyTorch implementation of RAMBO, please see [OfflineRL-Kit](https://github.com/yihaosun1124/OfflineRL-Kit).
 
 ## Installation
 1. Install [MuJoCo 2.1.0](https://github.com/deepmind/mujoco/releases) to `~/.mujoco/mujoco210`.
