@@ -9,9 +9,10 @@ Our implementation builds upon the code for [MOPO](https://github.com/tianheyu92
 2. Create a conda environment and install RAMBO.
 ```
 cd rambo
-conda env create -f environment/rambo_env.yml
+conda create --name rambo python=3.7
 conda activate rambo
 pip install -e .
+pip install -r requirements.txt
 ```
 
 ## Usage

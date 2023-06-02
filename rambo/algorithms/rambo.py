@@ -20,7 +20,6 @@ from softlearning.replay_pools.simple_replay_pool import SimpleReplayPool
 from rambo.models.constructor import construct_model, format_samples_for_training
 from rambo.models.fake_env import FakeEnv
 from rambo.utils.writer import Writer
-from rambo.utils.visualization import visualize_policy
 from rambo.utils.logging import Progress
 import rambo.utils.utils as utl
 import rambo.utils.filesystem as filesystem
@@ -602,19 +601,6 @@ class RAMBO(RLAlgorithm):
             sum(steps_added), self._model_pool.size, self._model_pool._max_size, mean_rollout_length, self._n_train_repeat
         ))
         return rollout_stats
-
-    def _visualize_model(self, env, timestep):
-        ## save env state
-        state = env.unwrapped.state_vector()
-        qpos_dim = len(env.unwrapped.sim.data.qpos)
-        qpos = state[:qpos_dim]
-        qvel = state[qpos_dim:]
-
-        print('[ Visualization ] Starting | Epoch {} | Log dir: {}\n'.format(self._epoch, self._log_dir))
-        visualize_policy(env, self.fake_env, self._policy, self._writer, timestep)
-        print('[ Visualization ] Done')
-        ## set env state
-        env.unwrapped.set_state(qpos, qvel)
 
     def _training_batch(self, batch_size=None):
         batch_size = batch_size or self.sampler._batch_size

@@ -1,0 +1,16 @@
+click
+git+https://github.com/Farama-Foundation/d4rl@master#egg=d4rl
+dotmap
+GitPython
+gtimer
+mujoco_py==2.1.2.14
+gym==0.17.3
+protobuf==3.20.*
+scipy
+git+https://github.com/hartikainen/serializable.git@76516385a3a716ed4a2a9ad877e2d5cbcf18d4e6
+setuptools
+tensorboardx==1.8
+tensorflow-gpu==1.14.0
+tensorflow-probability==0.7.0
+tqdm
+wandb
